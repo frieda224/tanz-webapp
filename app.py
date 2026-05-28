@@ -58,5 +58,67 @@ if profi_file and user_file:
     score_arm = max(0, 100 - abs(arm_profi - arm_user))
     score_fuss = max(0, 100 - abs(fuss_profi - fuss_user))
     
-    # Basis-Score aus den Reglern
-    basis_score = (score_kopf + score
+    # Basis-Score aus den Reglern (JETZT KORREKT!)
+    basis_score = (score_kopf + score_arm + score_fuss) / 3
+    
+    # KNALLHARTES ABZUGSSYSTEM (Malus)
+    abzug = 0
+    kritik_punkte = []
+    
+    if fehler_drehung:
+        abzug += 30
+        kritik_punkte.append("🛑 **Achsen-Kollaps:** Du stehst nicht über deinem Standbein und bist aus der Drehung gefallen. Ohne bombenfeste Körperspannung im Core (Bauch- und Rückenmuskulatur) bleibt jede Pirouette instabil.")
+    
+    if fehler_spotten:
+        abzug += 25
+        kritik_punkte.append("🛑 **Kopf-Verzögerung:** Kein Spotting sichtbar! Wenn der Blick den Fixpunkt verliert und der Kopf nicht peitschenknallartig als Letztes geht und als Erstes wieder ankommt, ist die Drehung technisch wertlos und Schwindel die Folge.")
+        
+    if fehler_banane:
+        abzug += 25
+        kritik_punkte.append("🛑 **Bananenfuß:** Katastrophale Fußstreckung! Das Fußgelenk knickt ein, statt eine fließende, verlängerte Linie mit dem Schienbein zu bilden. Die Zehen müssen aktiv und mit maximaler Spannung langgezogen werden.")
+
+    # Der finale Score (wird modifiziert)
+    gesamtscore = basis_score - abzug
+    
+    # DER BALLETT-MEISTER-TRICK: Es gibt niemals 100%!
+    if gesamtscore > 95:
+        gesamtscore = 92.5  # Deckelung
+    
+    st.divider()
+    st.header("📋 Das Urteil des Ballettmeisters")
+    
+    col_fb1, col_fb2 = st.columns(2)
+    
+    with col_fb1:
+        st.subheader("📊 Unerbittliche Punktebewertung")
+        
+        # Strenge Textausgaben je nach Score
+        if gesamtscore >= 85:
+            st.warning(f"⚠️ {gesamtscore:.1f}% – Sauberer Ansatz, ABER weit entfernt von Perfektion. Die geometrische Form stimmt zwar ansatzweise, aber es fehlt an der letzten Projektion, Leichtigkeit und der korrekten Körperspannung.")
+        elif gesamtscore >= 60:
+            st.error(f"❌ {gesamtscore:.1f}% – Mangelhafte Ausführung! Grobe Defizite in der Platzierung des Körpers. Du tanzt gegen die Schwerkraft, statt sie zu nutzen.")
+        else:
+            st.error(f"💀 {gesamtscore:.1f}% – Inakzeptabel! Technische Grundlagen wurden missachtet. Gehe zurück an die Stange (Barre) und arbeite an deiner Basis-Platzierung.")
+
+        st.write("**Detaillierte Abweichungen (Winkel):**")
+        st.write(f"- Kopf-Präzision: {score_kopf:.1f}%")
+        st.write(f"- Arm-Linie (Port de bras): {score_arm:.1f}%")
+        st.write(f"- Fuß-Spannung (Extension): {score_fuss:.1f}%")
+            
+    with col_fb2:
+        st.markdown("### 📝 Unverzügliche Korrektur-Aufgaben")
+        
+        # Zeige die angehakten harten Fehler
+        if kritik_punkte:
+            for kritik in kritik_punkte:
+                st.write(kritik)
+        
+        # Die "Immer-Kritik"
+        st.markdown("---")
+        st.markdown("##### 🩰 Mikro-Korrekturen (Die immer gelten):")
+        st.write("• **Schultern:** Drücke die Schulterblätter aktiv nach unten! Sie wandern viel zu weit zu den Ohren.")
+        st.write("• **Finger:** Die Hände wirken verkrampft. Die Finger müssen die Bewegung weich verlängern, der Daumen wird leicht eingedreht.")
+        st.write("• **Standbein:** Das Knie des Standbeins ist nicht maximal durchgestreckt – verliere niemals die Länge im Raum!")
+
+        # Feld für eigene Notizen
+        st.text_area("Eigenanalyse für das Vortragsprotokoll:", placeholder="Welche Korrekturhinweise des Lehrers wurden heute umgesetzt?")
