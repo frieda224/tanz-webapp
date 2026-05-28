@@ -24,11 +24,11 @@ with col2:
         user_img = Image.open(user_file)
         st.image(user_img, caption="Deine Pose", use_container_width=True)
 
-# --- MANUELLE POSEN-ANALYSE (STABIL FÜR SCHULE & PRÄSENTATION) ---
+# --- POSEN-ANALYSE ---
 if profi_file and user_file:
     st.divider()
-    st.header("📋 Posen-Vergleich")
-    st.write("Trage hier die geschätzten Gelenkwinkel ein, um die Haltung zu überprüfen:")
+    st.header("📋 Haltungs-Vergleich & Analyse")
+    st.write("Trage hier die geschätzten Gelenkwinkel ein, um die Haltung mathematisch zu überprüfen:")
 
     col_w1, col_w2 = st.columns(2)
     
@@ -42,11 +42,29 @@ if profi_file and user_file:
     abweichung = abs(winkel_profi - winkel_user)
     score = max(0, 100 - abweichung)
     
+    # --- NEU: ZWEI SPALTEN FÜR FEEDBACK & KORREKTUR-NOTIZEN ---
     st.subheader(f"Ergebnis: {score}% Übereinstimmung")
     
-    if score > 85:
-        st.success("🌟 Sensationell! Deine Haltung stimmt fast perfekt mit dem Profi überein!")
-    elif score > 60:
-        st.warning("👍 Solide Leistung! Korrigiere deinen Armwinkel noch ein kleines bisschen.")
-    else:
-        st.error("❌ Große Abweichung. Schau dir den Armwinkel beim Profi noch einmal genau an!")
+    col_fb1, col_fb2 = st.columns(2)
+    
+    with col_fb1:
+        st.markdown("### 🤖 KI-Feedback")
+        if score > 85:
+            st.success("🌟 Sensationell! Deine Haltung stimmt fast perfekt mit dem Profi überein!")
+        elif score > 60:
+            st.warning("👍 Solide Leistung! Korrigiere deinen Armwinkel noch ein kleines bisschen.")
+        else:
+            st.error("❌ Große Abweichung. Schau dir den Armwinkel beim Profi noch einmal genau an!")
+            
+    with col_fb2:
+        st.markdown("### 📝 Deine Korrektur-Notizen")
+        # Hier kannst du eintragen, was korrigiert werden muss
+        korrektur_text = st.text_area(
+            "Was muss an dieser Pose noch verbessert werden?",
+            placeholder="Z.B.: Rechten Ellenbogen um 15 Grad höher anheben / Hüfte gerader strecken...",
+            key="korrektur"
+        )
+        
+        # Zeigt den Text direkt darunter nochmal formatiert an, wenn etwas eingetragen wurde
+        if korrektur_text:
+            st.info(f"**Gespeicherte Korrektur-Aufgabe:**\n{korrektur_text}")
