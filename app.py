@@ -33,8 +33,6 @@ if profi_file and user_file:
     
     with col_inputs:
         st.markdown("### 📐 Gelenk- und Achsenabgleich")
-        st.write("Stelle die Slider nach bestem Wissen ein. Die KI wird die Fehler aufdecken:")
-        
         kopf_profi = st.slider("Kopf-Winkel Profi", 0, 180, 90, key="k_profi")
         kopf_user = st.slider("Dein Kopf-Winkel", 0, 180, 90, key="k_user")
         
@@ -46,43 +44,40 @@ if profi_file and user_file:
 
     with col_errors:
         st.markdown("### 🚨 Sichtbare technische Patzer")
-        st.write("Hake die Fehler an, die auf deinem Foto zu sehen sind:")
-        
         fehler_drehung = st.checkbox("Aus der Drehung gefallen / Achse verloren", key="f_drehung")
         fehler_spotten = st.checkbox("Kopf spottet nicht (Blick verloren)", key="f_spotten")
         fehler_banane = st.checkbox("Bananenfuß (Unsaubere Fußstreckung)", key="f_banane")
 
-    # --- BERECHNUNG MIT BALLETT-ABZUG ---
-    score_kopf = max(0, 100 - abs(kopf_profi - kopf_user))
-    score_arm = max(0, 100 - abs(arm_profi - arm_user))
-    score_fuss = max(0, 100 - abs(fuss_profi - fuss_user))
+    # --- HIER WAR DER FEHLER: JETZT ABSOLUT SICHER BERECHNET ---
+    diff_k = abs(kopf_profi - kopf_user)
+    diff_a = abs(arm_profi - arm_user)
+    diff_f = abs(fuss_profi - fuss_user)
     
-    # Hier stand der Fehler: Jetzt ist alles sauber in einer Zeile berechnet!
-    basis_score = (score_kopf + score_arm + score_fuss) / 3
-    
-    # KNALLHARTES ABZUGSSYSTEM
+    reiner_schnitt = (diff_k + diff_a + diff_f) / 3
+    basis_score = 100 - reiner_schnitt
+
+    # Abzüge berechnen
     abzug = 0
     kritik_punkte = []
     
     if fehler_drehung:
         abzug += 30
-        kritik_punkte.append("🛑 **Achsen-Kollaps:** Du stehst nicht über deinem Standbein und bist aus der Drehung gefallen. Ohne Körperspannung im Core (Bauch/Rücken) bleibt jede Pirouette instabil.")
-    
+        kritik_punkte.append("🛑 **Achsen-Kollaps:** Aus der Drehung gefallen. Ohne Core-Spannung bleibt die Pirouette instabil.")
     if fehler_spotten:
         abzug += 25
-        kritik_punkte.append("🛑 **Kopf-Verzögerung:** Kein Spotting sichtbar! Wenn der Blick den Fixpunkt verliert und der Kopf nicht peitschenknallartig dreht, verlierst du die Orientierung.")
-        
+        kritik_punkte.append("🛑 **Kopf-Verzögerung:** Kein Spotting! Kopf muss peitschenknallartig drehen.")
     if fehler_banane:
         abzug += 25
-        kritik_punkte.append("🛑 **Bananenfuß:** Unsaubere Fußstreckung! Das Fußgelenk knickt ein. Die Zehen müssen aktiv langgezogen werden, um eine Linie mit dem Schienbein zu bilden.")
+        kritik_punkte.append("🛑 **Bananenfuß:** Unsaubere Fußstreckung! Gelenk knickt ein.")
 
-    # Berechne das finale Ergebnis
     gesamtscore = basis_score - abzug
     
-    # Der Ballettmeister-Trick: Es gibt niemals 100%!
     if gesamtscore > 95:
         gesamtscore = 92.5
-    
+        
+    gesamtscore = max(0, gesamtscore)
+
+    # --- AUSGABE ---
     st.divider()
     st.header("📋 Das Urteil des Ballettmeisters")
     
@@ -90,30 +85,23 @@ if profi_file and user_file:
     
     with col_fb1:
         st.subheader("📊 Unerbittliche Punktebewertung")
-        
         if gesamtscore >= 85:
-            st.warning(f"⚠️ {gesamtscore:.1f}% – Sauberer Ansatz, ABER weit entfernt von Perfektion. Es fehlt an Leichtigkeit und korrekter Körperspannung.")
+            st.warning(f"⚠️ {gesamtscore:.1f}% – Sauberer Ansatz, ABER weit entfernt von Perfektion. Es fehlt an Körperspannung.")
         elif gesamtscore >= 60:
-            st.error(f"❌ {gesamtscore:.1f}% – Mangelhafte Ausführung! Grobe Defizite in der Platzierung des Körpers.")
+            st.error(f"❌ {gesamtscore:.1f}% – Mangelhafte Ausführung! Grobe Defizite in der Platzierung.")
         else:
-            st.error(f"💀 {gesamtscore:.1f}% – Inakzeptabel! Gehe zurück an die Stange (Barre) und arbeite an deiner Basis-Platzierung.")
-
-        st.write("**Detaillierte Abweichungen:**")
-        st.write(f"- Kopf-Präzision: {score_kopf:.1f}%")
-        st.write(f"- Arm-Linie (Port de bras): {score_arm:.1f}%")
-        st.write(f"- Fuß-Spannung (Extension): {score_fuss:.1f}%")
+            st.error(f"💀 {gesamtscore:.1f}% – Inakzeptabel! Gehe zurück an die Stange (Barre).")
             
     with col_fb2:
         st.markdown("### 📝 Unverzügliche Korrektur-Aufgaben")
-        
         if kritik_punkte:
             for kritik in kritik_punkte:
                 st.write(kritik)
         
         st.markdown("---")
         st.markdown("##### 🩰 Mikro-Korrekturen (Die immer gelten):")
-        st.write("• **Schultern:** Drücke die Schulterblätter aktiv nach unten! Sie wandern viel zu weit zu den Ohren.")
-        st.write("• **Finger:** Die Hände wirken verkrampft. Die Finger müssen die Bewegung weich verlängern.")
+        st.write("• **Schultern:** Drücke die Schulterblätter aktiv nach unten!")
+        st.write("• **Finger:** Die Hände wirken verkrampft. Finger weich verlängern.")
         st.write("• **Standbein:** Das Knie des Standbeins ist nicht maximal durchgestreckt!")
 
-        st.text_area("Eigenanalyse für das Vortragsprotokoll:", placeholder="Welche Korrekturhinweise des Lehrers wurden heute umgesetzt?")
+        st.text_area("Eigenanalyse für das Vortragsprotokoll:", placeholder="Welche Korrekturen wurden heute umgesetzt?")
