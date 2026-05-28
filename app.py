@@ -1,3 +1,8 @@
+import sys
+# Trick: Wir zwingen Python, die Headless-Version als Standard-OpenCV zu akzeptieren
+import cv2
+sys.modules['cv2'] = cv2
+
 import streamlit as st
 import numpy as np
 from PIL import Image
@@ -38,7 +43,7 @@ st.subheader("2. Dein Foto")
 user_file = st.file_uploader("Lade dein eigenes Foto hoch", type=["jpg", "png", "jpeg"], key="user")
 
 if profi_file and user_file:
-    # Bilder vorbereiten (Rein über PIL und numpy)
+    # Bilder vorbereiten
     profi_img = Image.open(profi_file).convert('RGB')
     user_img = Image.open(user_file).convert('RGB')
     
