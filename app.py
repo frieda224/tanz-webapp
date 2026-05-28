@@ -7,7 +7,7 @@ st.set_page_config(page_title="Ballett-Meister KI (Gnadenlose Analyse)", layout=
 st.title("🩰 Ballett-Meister KI – Die ungeschminkte Wahrheit")
 st.write("Im Ballett ist nichts jemals perfekt. Diese KI analysiert deine Haltung mit der Strenge einer professionellen Academie.")
 
-# --- SPALTEN FÜR DIE BILDER ---
+# --- BILDER HOCHLADEN ---
 col1, col2 = st.columns(2)
 
 with col1:
@@ -29,7 +29,6 @@ if profi_file and user_file:
     st.divider()
     st.header("🔍 Protokoll der Haltungsmängel")
     
-    # Eingabe-Bereich
     col_inputs, col_errors = st.columns([2, 1])
     
     with col_inputs:
@@ -58,21 +57,63 @@ if profi_file and user_file:
     score_arm = max(0, 100 - abs(arm_profi - arm_user))
     score_fuss = max(0, 100 - abs(fuss_profi - fuss_user))
     
-    # Basis-Score aus den Reglern (Hier war der Fehler - jetzt repariert!)
+    # Hier stand der Fehler: Jetzt ist alles sauber in einer Zeile berechnet!
     basis_score = (score_kopf + score_arm + score_fuss) / 3
     
-    # KNALLHARTES ABZUGSSYSTEM (Malus)
+    # KNALLHARTES ABZUGSSYSTEM
     abzug = 0
     kritik_punkte = []
     
     if fehler_drehung:
         abzug += 30
-        kritik_punkte.append("🛑 **Achsen-Kollaps:** Du stehst nicht über deinem Standbein und bist aus der Drehung gefallen. Ohne bombenfeste Körperspannung im Core (Bauch- und Rückenmuskulatur) bleibt jede Pirouette instabil.")
+        kritik_punkte.append("🛑 **Achsen-Kollaps:** Du stehst nicht über deinem Standbein und bist aus der Drehung gefallen. Ohne Körperspannung im Core (Bauch/Rücken) bleibt jede Pirouette instabil.")
     
     if fehler_spotten:
         abzug += 25
-        kritik_punkte.append("🛑 **Kopf-Verzögerung:** Kein Spotting sichtbar! Wenn der Blick den Fixpunkt verliert und der Kopf nicht peitschenknallartig als Letztes geht und als Erstes wieder ankommt, ist die Drehung technisch wertlos und Schwindel die Folge.")
+        kritik_punkte.append("🛑 **Kopf-Verzögerung:** Kein Spotting sichtbar! Wenn der Blick den Fixpunkt verliert und der Kopf nicht peitschenknallartig dreht, verlierst du die Orientierung.")
         
     if fehler_banane:
         abzug += 25
-        kritik_punkte.append("🛑 **Bananenfuß:** Katastrophale Fußstreckung! Das Fußgelenk knickt ein, statt eine fließende, verlängerte Linie mit dem Schienbein zu
+        kritik_punkte.append("🛑 **Bananenfuß:** Unsaubere Fußstreckung! Das Fußgelenk knickt ein. Die Zehen müssen aktiv langgezogen werden, um eine Linie mit dem Schienbein zu bilden.")
+
+    # Berechne das finale Ergebnis
+    gesamtscore = basis_score - abzug
+    
+    # Der Ballettmeister-Trick: Es gibt niemals 100%!
+    if gesamtscore > 95:
+        gesamtscore = 92.5
+    
+    st.divider()
+    st.header("📋 Das Urteil des Ballettmeisters")
+    
+    col_fb1, col_fb2 = st.columns(2)
+    
+    with col_fb1:
+        st.subheader("📊 Unerbittliche Punktebewertung")
+        
+        if gesamtscore >= 85:
+            st.warning(f"⚠️ {gesamtscore:.1f}% – Sauberer Ansatz, ABER weit entfernt von Perfektion. Es fehlt an Leichtigkeit und korrekter Körperspannung.")
+        elif gesamtscore >= 60:
+            st.error(f"❌ {gesamtscore:.1f}% – Mangelhafte Ausführung! Grobe Defizite in der Platzierung des Körpers.")
+        else:
+            st.error(f"💀 {gesamtscore:.1f}% – Inakzeptabel! Gehe zurück an die Stange (Barre) und arbeite an deiner Basis-Platzierung.")
+
+        st.write("**Detaillierte Abweichungen:**")
+        st.write(f"- Kopf-Präzision: {score_kopf:.1f}%")
+        st.write(f"- Arm-Linie (Port de bras): {score_arm:.1f}%")
+        st.write(f"- Fuß-Spannung (Extension): {score_fuss:.1f}%")
+            
+    with col_fb2:
+        st.markdown("### 📝 Unverzügliche Korrektur-Aufgaben")
+        
+        if kritik_punkte:
+            for kritik in kritik_punkte:
+                st.write(kritik)
+        
+        st.markdown("---")
+        st.markdown("##### 🩰 Mikro-Korrekturen (Die immer gelten):")
+        st.write("• **Schultern:** Drücke die Schulterblätter aktiv nach unten! Sie wandern viel zu weit zu den Ohren.")
+        st.write("• **Finger:** Die Hände wirken verkrampft. Die Finger müssen die Bewegung weich verlängern.")
+        st.write("• **Standbein:** Das Knie des Standbeins ist nicht maximal durchgestreckt!")
+
+        st.text_area("Eigenanalyse für das Vortragsprotokoll:", placeholder="Welche Korrekturhinweise des Lehrers wurden heute umgesetzt?")
