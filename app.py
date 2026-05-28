@@ -2,10 +2,10 @@ import streamlit as st
 from PIL import Image
 
 # --- SEITEN-SETUP ---
-st.set_page_config(page_title="Tanz-Trainer", layout="wide")
+st.set_page_config(page_title="Tanz-Trainer Pro", layout="wide")
 
-st.title("🩰 Tanz-Trainer")
-st.write("Vergleiche deine Pose mit einem Profi – Schnell, stabil und ohne Server-Abstürze!")
+st.title("🩰 Tanz-Trainer Pro")
+st.write("Vergleiche Kopf, Arme und Füße mit dem Profi – Schnell, stabil und präzise!")
 
 # --- SPALTEN FÜR DIE BILDER ---
 col1, col2 = st.columns(2)
@@ -24,47 +24,63 @@ with col2:
         user_img = Image.open(user_file)
         st.image(user_img, caption="Deine Pose", use_container_width=True)
 
-# --- POSEN-ANALYSE ---
+# --- ERWEITERTE POSEN-ANALYSE ---
 if profi_file and user_file:
     st.divider()
-    st.header("📋 Haltungs-Vergleich & Analyse")
-    st.write("Trage hier die geschätzten Gelenkwinkel ein, um die Haltung mathematisch zu überprüfen:")
+    st.header("📋 Erweiterter Haltungs-Vergleich")
+    st.write("Trage hier die geschätzten Winkel oder Werte für die verschiedenen Körperbereiche ein:")
 
-    col_w1, col_w2 = st.columns(2)
+    # Drei Spalten für die drei Bereiche (Kopf, Arme, Füße)
+    col_k, col_a, col_f = st.columns(3)
     
-    with col_w1:
-        winkel_profi = st.slider("Armwinkel beim Profi (in Grad)", 0, 180, 90)
+    with col_k:
+        st.markdown("### 👤 Kopfhaltung")
+        kopf_profi = st.slider("Kopf-Winkel Profi", 0, 180, 90, key="k_profi")
+        kopf_user = st.slider("Dein Kopf-Winkel", 0, 180, 90, key="k_user")
+        abweichung_kopf = abs(kopf_profi - kopf_user)
+        score_kopf = max(0, 100 - abweichung_kopf)
+        st.metric("Übereinstimmung Kopf", f"{score_kopf:.0f}%")
+
+    with col_a:
+        st.markdown("### 💪 Armhaltung")
+        arm_profi = st.slider("Arm-Winkel Profi", 0, 180, 90, key="a_profi")
+        arm_user = st.slider("Dein Arm-Winkel", 0, 180, 90, key="a_user")
+        abweichung_arm = abs(arm_profi - arm_user)
+        score_arm = max(0, 100 - abweichung_arm)
+        st.metric("Übereinstimmung Arme", f"{score_arm:.0f}%")
         
-    with col_w2:
-        winkel_user = st.slider("Dein Armwinkel (in Grad)", 0, 180, 90)
+    with col_f:
+        st.markdown("### 🦵 Fuß- & Beinstellung")
+        fuss_profi = st.slider("Fuß-Winkel Profi", 0, 180, 90, key="f_profi")
+        fuss_user = st.slider("Dein Fuß-Winkel", 0, 180, 90, key="f_user")
+        abweichung_fuss = abs(fuss_profi - fuss_user)
+        score_fuss = max(0, 100 - abweichung_fuss)
+        st.metric("Übereinstimmung Füße", f"{score_fuss:.0f}%")
         
-    # Berechnung des Scores
-    abweichung = abs(winkel_profi - winkel_user)
-    score = max(0, 100 - abweichung)
+    # --- GESAMTERGEBNIS ---
+    st.divider()
+    gesamtscore = (score_kopf + score_arm + score_fuss) / 3
+    st.subheader(f"📊 Gesamt-Ergebnis: {gesamtscore:.1f}% Übereinstimmung")
     
-    # --- NEU: ZWEI SPALTEN FÜR FEEDBACK & KORREKTUR-NOTIZEN ---
-    st.subheader(f"Ergebnis: {score}% Übereinstimmung")
-    
+    # --- ZWEI SPALTEN FÜR FEEDBACK & KORREKTUR-NOTIZEN ---
     col_fb1, col_fb2 = st.columns(2)
     
     with col_fb1:
         st.markdown("### 🤖 KI-Feedback")
-        if score > 85:
-            st.success("🌟 Sensationell! Deine Haltung stimmt fast perfekt mit dem Profi überein!")
-        elif score > 60:
-            st.warning("👍 Solide Leistung! Korrigiere deinen Armwinkel noch ein kleines bisschen.")
+        if gesamtscore > 85:
+            st.success("🌟 Sensationell! Deine Gesamthaltung stimmt fast perfekt mit dem Profi überein!")
+        elif gesamtscore > 60:
+            st.warning("👍 Gute Ansätze! Schau dir oben die einzelnen Werte an, wo es noch Abweichungen gibt.")
         else:
-            st.error("❌ Große Abweichung. Schau dir den Armwinkel beim Profi noch einmal genau an!")
+            st.error("❌ Größere Abweichungen in der Pose. Nutze die Slider, um Schritt für Schritt zu korrigieren.")
             
     with col_fb2:
         st.markdown("### 📝 Deine Korrektur-Notizen")
-        # Hier kannst du eintragen, was korrigiert werden muss
         korrektur_text = st.text_area(
-            "Was muss an dieser Pose noch verbessert werden?",
-            placeholder="Z.B.: Rechten Ellenbogen um 15 Grad höher anheben / Hüfte gerader strecken...",
+            "Welche Details möchtest du korrigieren?",
+            placeholder="Z.B.: Kopf gerader halten, linken Fuß weiter nach außen drehen...",
             key="korrektur"
         )
         
-        # Zeigt den Text direkt darunter nochmal formatiert an, wenn etwas eingetragen wurde
         if korrektur_text:
-            st.info(f"**Gespeicherte Korrektur-Aufgabe:**\n{korrektur_text}")
+            st.info(f"**Gespeicherte Korrektur-Aufgaben:**\n{korrektur_text}")
