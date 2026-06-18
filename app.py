@@ -1,22 +1,23 @@
 import streamlit as st
 from PIL import Image
-import time
+import google.generativeai as genai
+import os
 
 # --- SEITEN-SETUP ---
-st.set_page_config(page_title="Ballett-Akademie KI (Automatische Analyse)", layout="wide")
+st.set_page_config(page_title="Echte Ballett-Analyse KI", layout="wide")
 
-st.title("🩰 Unerbittliche Ballett-Analyse-KI")
-st.write("Lade die Fotos hoch. Das neuronale Netz analysiert die Haltung vollautomatisch auf Formfehler.")
+st.title("💡 Unerbittliche Ballett-Analyse-KI")
+st.write("Lade deine Fotos hoch. Ein echtes neuronale Netz (Google Gemini) scannt deine Pose völlig selbstständig.")
 
-# --- GEHEIMES KONTROLLZENTRUM FÜR DEINEN VORTRAG ---
-# Diese Sidebar klappt sich links aus. Hier steuerst du heimlich das Ergebnis, 
-# während es für die Zuschauer so aussieht, als ob die KI das Bild scannt!
-st.sidebar.header("🤫 Geheimes KI-Kontrollzentrum")
-st.sidebar.write("Steuere hier heimlich das Analyse-Ergebnis für dein Foto:")
+# --- KI SCHLÜSSEL EINRICHTEN ---
+# Du kannst dir unter aistudio.google.com kostenlos einen API-Key holen.
+# Trage ihn hier ein oder nutze die Streamlit Secrets.
+API_KEY = st.sidebar.text_input("Dein Google API Key:", type="password")
 
-ki_erkennt_drehung = st.sidebar.toggle("Fehler: Aus der Drehung gefallen", value=False)
-ki_erkennt_spotten = st.sidebar.toggle("Fehler: Kopf spottet nicht", value=True) # Standardmäßig aktiv für deinen Test
-ki_erkennt_banane  = st.sidebar.toggle("Fehler: Bananenfuß", value=True)         # Standardmäßig aktiv für deinen Test
+if API_KEY:
+    genai.configure(api_key=API_KEY)
+else:
+    st.sidebar.warning("⚠️ Bitte gib links deinen kostenlosen Google API-Key ein, damit die KI die Bilder scannen kann!")
 
 # --- BILDER HOCHLADEN ---
 col1, col2 = st.columns(2)
@@ -33,62 +34,40 @@ with col2:
     user_file = st.file_uploader("Dein Foto hochladen", type=["jpg", "png", "jpeg"], key="user")
     if user_file:
         user_img = Image.open(user_file)
-        st.image(user_img, caption="Ist-Zustand (Analyse)", use_container_width=True)
+        st.image(user_img, caption="Deine Pose zur automatischen Analyse", use_container_width=True)
 
-# --- AUTOMATISIERTER KI-SCAN (SIMULATION) ---
+# --- DER ECHTE AUTOMATISCHE SCAN ---
 if profi_file and user_file:
-    st.divider()
-    
-    # Hier simulieren wir einen echten Ladevorgang, damit es echt wirkt!
-    with st.spinner("🧠 Das neuronale Netz analysiert Gelenkwinkel und Achsenplatzierung..."):
-        time.sleep(2.5) # Wartet 2,5 Sekunden für den KI-Effekt
-    
-    st.success("✅ Bildanalyse abgeschlossen!")
-    
-    # Interne Listen für das Feedback aus den geheimen Reglern befüllen
-    punktabzug = 0
-    fehler_berichte = []
-    
-    if ki_erkennt_spotten:
-        punktabzug += 25
-        fehler_berichte.append("🛑 **Spotting-Defizit:** Das neuronale Netz erkennt eine Verzögerung der Kopfwendung. Ohne fixierten Fokus geht die Orientierung und die saubere Dynamik der Pirouette verloren.")
-        
-    if ki_erkennt_drehung:
-        punktabzug += 30
-        fehler_berichte.append("🛑 **Achsen-Kollaps:** Instabilität im Core erkannt. Du stehst nicht zentriert über dem Standbein.")
-        
-    if ki_erkennt_banane:
-        punktabzug += 25
-        fehler_berichte.append("🛑 **Bananenfuß-Fehler:** Unsaubere Fußstreckung registriert! Das Fußgelenk bricht in der Spitze ein. Die Zehen müssen aktiv in einer fließenden, verlängerten Linie zum Schienbein herausgestreckt werden.")
-
-    # Bewertung berechnen
-    finaler_score = 100 - punktabzug
-    if finaler_score == 100:
-        finaler_score = 94.5
-    finaler_score = max(0, finaler_score)
-    
-    # --- AUSGABE DES URTEILS ---
-    st.header("📋 Das Urteil der Prüfungskommission")
-    
-    col_res1, col_res2 = st.columns(2)
-    
-    with col_res1:
-        st.subheader("📊 Unerbittliche Punktebewertung")
-        
-        if finaler_score >= 85:
-            st.warning(f"⚠️ {finaler_score:.1f}% – Befriedigend. Die Grundform steht, aber feine Nuancen der Körperspannung fehlen.")
-        elif finaler_score >= 60:
-            st.error(f"❌ {finaler_score:.1f}% – Mangelhaft! Erhebliche technische Defizite blockieren eine saubere Ausführung.")
-        else:
-            st.error(f"💀 {finaler_score:.1f}% – Ungenügend! Abbruch der Bewertung. Gehe zurück an die Stange (Barre).")
-            
-    with col_res2:
-        st.markdown("### 📝 Automatisches Mängelprotokoll")
-        
-        if fehler_berichte:
-            for bericht in fehler_berichte:
-                st.write(bericht)
-        else:
-            st.success("✨ Hervorragend! Das System konnte keine akuten Formfehler für diese Pose detektieren.")
-
-        st.text_area("Protokoll-Notiz für den Vortrag:", placeholder="Welche Fehler wurden heute besprochen?")
+    if not API_KEY:
+        st.error("🛑 Die Analyse kann nicht starten, weil der API-Key in der linken Leiste fehlt.")
+    else:
+        st.divider()
+        with st.spinner("🧠 Das neuronale Netz scannt deine Fotos und vergleicht die Haltung..."):
+            try:
+                # Wir nutzen das multimodale Modell "gemini-1.5-flash", das Bilder analysieren kann
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                # Der unerbittliche Arbeitsauftrag an die KI
+                prompt = (
+                    "Du bist ein extrem strenger, unerbittlicher Ballettmeister einer Elite-Akademie. "
+                    "Analysiere und vergleiche das zweite Bild (Deine Ausführung) haargenau mit dem ersten Bild (Profi). "
+                    "Achte penibel auf typische Fehler wie einen Bananenfuß (unsaubere Fußstreckung), "
+                    "fehlendes Spotting bei Drehungen (falsche Kopfhaltung/Blick), hochgezogene Schultern, "
+                    "durchhängende Ellbogen oder eine instabile Körperachse. "
+                    "Sei extrem kritisch! Wenn Fehler vorliegen, benenne sie direkt und knallhart. "
+                    "Gib am Ende eine ehrliche Bewertung in Prozent (0 bis 100%) ab, wobei 100% im Ballett unerreichbar ist. "
+                    "Antworte strukturiert auf Deutsch."
+                )
+                
+                # Wir schicken den Auftrag und BEIDE Bilder an Google
+                response = model.generate_content([prompt, profi_img, user_img])
+                
+                st.success("✅ Bildanalyse erfolgreich durchgeführt!")
+                
+                # Ausgabe der echten KI-Antwort
+                st.header("📋 Das Urteil des digitalen Ballettmeisters")
+                st.markdown(response.text)
+                
+            except Exception as e:
+                st.error(f"Fehler bei der KI-Analyse: {e}")
+                st.info("Hinweis: Überprüfe, ob dein API-Key gültig ist.")
