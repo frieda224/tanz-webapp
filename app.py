@@ -1,14 +1,28 @@
 import streamlit as st
 from PIL import Image
-import cv2
-import mediapipe as mp
-import numpy as np
+import google.generativeai as genai
 
 # --- SEITEN-SETUP ---
-st.set_page_config(page_title="Anatomische Ballett-Analyse", layout="wide")
+st.set_page_config(page_title="Unerbittliche Ballett-Analyse KI", layout="wide")
 
-st.title("🩰 Anatomisches Ballett-Analyse-Protokoll")
-st.write("Echte Gelenk- und Achsenberechnung. Erkennt Fehler basierend auf Biomechanik – ganz ohne manuelles Anklicken.")
+st.title("🩰 Unerbittliche Ballett-Analyse-KI")
+st.write("Lade deine Fotos hoch. Die KI scannt deine Pose völlig selbstständig und deckt Fehler unbarmherzig auf.")
+
+# --- API-KEY AUS DEN SYSTEMEINSTELLUNGEN LADEN ---
+# Holt sich den Schlüssel vollautomatisch aus den Streamlit Secrets
+api_key = st.secrets.get("GEMINI_API_KEY", "")
+
+if api_key:
+    genai.configure(api_key=api_key)
+    KI_BEREIT = True
+else:
+    KI_BEREIT = False
+    st.sidebar.warning("⚠️ Der GEMINI_API_KEY fehlt noch in den Streamlit Secrets!")
+    # Ausweichoption, falls du ihn doch mal schnell eintippen willst:
+    temp_key = st.sidebar.text_input("Oder hier temporär eingeben:", type="password")
+    if temp_key:
+        genai.configure(api_key=temp_key)
+        KI_BEREIT = True
 
 # --- BILDER HOCHLADEN ---
 col1, col2 = st.columns(2)
@@ -25,100 +39,39 @@ with col2:
     user_file = st.file_uploader("Dein Foto hochladen", type=["jpg", "png", "jpeg"], key="user")
     if user_file:
         user_img = Image.open(user_file)
-        st.image(user_img, caption="Deine Pose zur anatomischen Analyse", use_container_width=True)
+        st.image(user_img, caption="Deine Pose zur echten KI-Analyse", use_container_width=True)
 
-# --- WINKELBERECHNUNG (MATHEMATISCH) ---
-def berechne_winkel(a, b, c):
-    """Berechnet den Winkel am Scheitelpunkt b zwischen den Punkten a und c"""
-    a = np.array(a)  # Punkt A (z.B. Hüfte)
-    b = np.array(b)  # Punkt B (z.B. Knie)
-    c = np.array(c)  # Punkt C (z.B. Knöchel)
-    
-    radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
-    winkel = np.abs(radians * 180.0 / np.pi)
-    
-    if winkel > 180.0:
-        winkel = 360 - winkel
-        
-    return winkel
-
-# --- ECHTE BILDVERARBEITUNG MIT MEDIAPIPE ---
+# --- DER REALE AUTOMATISCHE SCAN ---
 if profi_file and user_file:
-    st.divider()
-    
-    # MediaPipe Pose-Erkennung initialisieren
-    mp_pose = mp.solutions.pose
-    
-    with st.spinner("🧠 Extrahiere Skelettachsen und berechne Gelenkwinkel..."):
-        try:
-            # Konvertiere das hochgeladene User-Bild in ein OpenCV-kompatibles Format
-            user_cv = cv2.cvtColor(np.array(user_img), cv2.COLOR_RGB2BGR)
-            
-            with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5) as pose:
-                ergebnis = pose.process(cv2.cvtColor(user_cv, cv2.COLOR_BGR2RGB))
+    if not KI_BEREIT:
+        st.error("🛑 Die automatische Analyse kann nicht starten, weil der Google API-Key nicht hinterlegt ist.")
+    else:
+        st.divider()
+        with st.spinner("🧠 Das neuronale Netz analysiert deine Haltung im Vergleich zum Profi..."):
+            try:
+                # Das stabile, visuelle Modell von Google aufrufen
+                model = genai.GenerativeModel('gemini-1.5-flash')
                 
-                if not ergebnis.pose_landmarks:
-                    st.error("🛑 Es wurden keine Gelenke auf deinem Foto erkannt. Bitte achte darauf, dass dein ganzer Körper gut sichtbar und gut ausgeleuchtet ist!")
-                else:
-                    landmarks = ergebnis.pose_landmarks.landmark
-                    
-                    # Koordinaten wichtiger Gelenke auslesen (normalisiert von 0 bis 1)
-                    schulter_l = [landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].x, landmarks[mp_pose.PoseLandmark.LEFT_SHOULDER.value].y]
-                    huefte_l = [landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].x, landmarks[mp_pose.PoseLandmark.LEFT_HIP.value].y]
-                    knie_l = [landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_KNEE.value].y]
-                    knoechel_l = [landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].x, landmarks[mp_pose.PoseLandmark.LEFT_ANKLE.value].y]
-                    zeh_l = [landmarks[mp_pose.PoseLandmark.LEFT_FOOT_INDEX.value].x, landmarks[mp_pose.PoseLandmark.LEFT_FOOT_INDEX.value].y]
-                    
-                    # --- BIOMECHANISCHE ANALYSE ---
-                    fehler_berichte = []
-                    score = 100
-                    
-                    # 1. Kniebeugung berechnen (Wie tief ist das Plié?)
-                    knie_winkel = berechne_winkel(huefte_l, knie_l, knoechel_l)
-                    
-                    # 2. Oberkörper-Lot prüfen (Abweichung der Linie Hüfte-Schulter von der vertikalen Achse)
-                    oberkoerper_winkel = berechne_winkel([huefte_l[0], 0], huefte_l, schulter_l)
-                    
-                    # 3. Fußstreckungs-Achse (Winkel zwischen Knie, Knöchel und Zehenspitze)
-                    fuss_winkel = berechne_winkel(knie_l, knoechel_l, zeh_l)
-                    
-                    # --- ECHTE FEHLERDEFINITION BASIEREND AUF MESSWERTEN ---
-                    
-                    # Fehler A: Oberkörper kippt beim Plié nach vorne
-                    if oberkoerper_winkel > 12:
-                        score -= 25
-                        fehler_berichte.append(f"🛑 **Oberkörper kippt vor ({oberkoerper_winkel:.1f}° Abweichung):** Beim Plié muss das Becken zentriert und der Rücken vollkommen vertikal bleiben. Du verlagerst das Gewicht fälschlicherweise nach vorne.")
-                    
-                    # Fehler B: Bananenfuß (Gilt, wenn das Bein gestreckt sein sollte und der Fuß einknickt)
-                    if fuss_winkel < 135 and knie_winkel > 165: 
-                        score -= 25
-                        fehler_berichte.append(f"🛑 **Bananenfuß / Unsaubere Fußachse ({fuss_winkel:.1f}°):** Bei gestrecktem Bein bricht die Linie zum Spann ein. Die Zehen verlängern nicht die saubere, gerade Linie des Schienbeins.")
-                    
-                    # Hinweis C: Wenn die Knie für ein Plié gar nicht gebeugt sind
-                    if knie_winkel > 175 and oberkoerper_winkel <= 12:
-                        fehler_berichte.append(f"ℹ️ **Hineinzoomen auf Knieachse:** Dein Standbein ist vollständig gestreckt ({knie_winkel:.1f}°). Für die Analyse eines Pliés ist keine ausreichende Kniebeugung messbar.")
-
-                    # Mindestscore festlegen
-                    score = max(0, score)
-                    
-                    # --- AUSGABE DES URTEILS ---
-                    st.header("📋 Das Urteil der anatomischen Auswertung")
-                    col_res1, col_res2 = st.columns(2)
-                    
-                    with col_res1:
-                        st.subheader("📊 Gemessene Winkelwerte")
-                        st.write(f"- **Knie-Beugung:** {knie_winkel:.1f}°")
-                        st.write(f"- **Oberkörper-Lot:** {oberkoerper_winkel:.1f}°")
-                        st.write(f"- **Fußgelenk-Linie:** {fuss_winkel:.1f}°")
-                        
-                        st.metric(label="Gesamtnote der Körperplatzierung", value=f"{score:.1f}%")
-                        
-                    with col_res2:
-                        st.markdown("### 📝 Reales Mängelprotokoll")
-                        if fehler_berichte:
-                            for bericht in fehler_berichte:
-                                st.write(bericht)
-                        else:
-                            st.success("✨ Die Gelenkachsen entsprechen der anatomischen Vorgabe für diese Position. Keine groben Fehlstellungen in Oberkörper oder Fußgelenk detektiert.")
-        except Exception as e:
-            st.error(f"🛑 Fehler bei der Server-Verarbeitung: {e}. Eventuell blockiert das Server-System die Bildbibliothek.")
+                # Der glasklare Arbeitsauftrag an die KI: Keine Ausreden, nur echte Fehler!
+                prompt = (
+                    "Du bist ein extrem strenger, unnachgiebiger Ballettmeister einer Elite-Akademie. "
+                    "Analysiere und vergleiche das zweite Bild (Deine Ausführung) haargenau mit dem ersten Bild (Profi). "
+                    "Schaue genau, welche Position getanzt wird (z.B. ein Plié, eine Arabesque oder eine Pirouette). "
+                    "Analysiere die Haltung passend zu dieser Position! Wenn es ein Plie ist, rede nicht über Spotting, "
+                    "sondern über die Knieöffnung und den Oberkörper. Wenn es eine Streckung ist, achte extrem auf einen Bananenfuß. "
+                    "Nenne NUR Fehler, die auf dem zweiten Bild wirklich und real zu sehen sind. Erfinde nichts! "
+                    "Sei extrem kritisch auf Profi-Niveau. Gib am Ende eine ehrliche Bewertung in Prozent (0 bis 100%) ab. "
+                    "Antworte übersichtlich in Stichpunkten auf Deutsch."
+                )
+                
+                # Bilder an das Google-Rechenzentrum übergeben
+                response = model.generate_content([prompt, profi_img, user_img])
+                
+                st.success("✅ Analyse erfolgreich abgeschlossen!")
+                
+                # Das unbestechliche Urteil ausgeben
+                st.header("📋 Das Urteil des digitalen Ballettmeisters")
+                st.markdown(response.text)
+                
+            except Exception as e:
+                st.error(f"Fehler bei der Übertragung an die KI: {e}")
