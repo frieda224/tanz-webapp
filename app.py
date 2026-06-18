@@ -10,7 +10,6 @@ st.write("Lade deine Fotos hoch. Die KI scannt deine Pose völlig selbstständig
 
 # --- SICHERE SCHLÜSSEL-EINGABE ÜBER DIE WEBSEITE ---
 st.sidebar.header("🔑 KI-Verbindung")
-# Das Passwort-Feld verbirgt den Key bei der Eingabe auf der Webseite
 api_key_input = st.sidebar.text_input("Gib hier deinen Google API-Key ein:", type="password")
 
 if api_key_input:
@@ -46,13 +45,15 @@ if profi_file and user_file:
         st.divider()
         with st.spinner("🧠 Das neuronale Netz analysiert deine Haltung im Vergleich zum Profi..."):
             try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                # GEÄNDERT: Wir nutzen 'gemini-2.5-flash', da dieses Modell das aktuellste ist 
+                # und die alten v1beta-Fehler auf Servern umgeht.
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 
                 prompt = (
                     "Du bist ein extrem strenger, unnachgiebiger Ballettmeister einer Elite-Akademie. "
                     "Analysiere und vergleiche das zweite Bild (Deine Ausführung) haargenau mit dem ersten Bild (Profi). "
                     "Schaue genau, welche Position getanzt wird (z.B. ein Plié, eine Arabesque oder eine Pirouette). "
-                    "Analysiere die Haltung passend zu dieser Position! Wenn es ein Plié ist, rede nicht über Spotting, "
+                    "Analysiere die Haltung passend to dieser Position! Wenn es ein Plié ist, rede nicht über Spotting, "
                     "sondern über die Knieöffnung und den Oberkörper. Wenn es eine Streckung ist, achte extrem auf einen Bananenfuß. "
                     "Nenne NUR Fehler, die auf dem zweiten Bild wirklich und real zu sehen sind. Erfinde nichts! "
                     "Sei extrem kritisch auf Profi-Niveau. Gib am Ende eine ehrliche Bewertung in Prozent (0 bis 100%) ab. "
@@ -66,4 +67,12 @@ if profi_file and user_file:
                 st.markdown(response.text)
                 
             except Exception as e:
-                st.error(f"Fehler bei der Übertragung an die KI: {e}")
+                # Falls auch das fehlschlägt, versuchen wir als automatischen Fallback das absolut universelle Modell
+                try:
+                    model = genai.GenerativeModel('models/gemini-1.5-flash')
+                    response = model.generate_content([prompt, profi_img, user_img])
+                    st.success("✅ Analyse erfolgreich abgeschlossen!")
+                    st.header("📋 Das Urteil des digitalen Ballettmeisters")
+                    st.markdown(response.text)
+                except Exception as inner_e:
+                    st.error(f"Fehler bei der Übertragung an die KI: {inner_e}")
