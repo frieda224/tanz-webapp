@@ -1,4 +1,4 @@
- import streamlit as st
+import streamlit as st
 from PIL import Image
 
 # --- SEITEN-SETUP ---
@@ -81,14 +81,14 @@ if profi_file and user_file:
     # --- BEWERTUNG BERECHNEN ---
     finaler_score = 100 - punktabzug
     
-    # Kleine akademische Deckelung: Ballett ist nie absolut 100% perfekt.
+    # Kleine akademische Deckelung
     if finaler_score == 100:
         finaler_score = 95.0
     finaler_score = max(0, finaler_score)
     
     # --- AUSGABE DES URTEILS ---
     st.divider()
-    st.header("📋 Das Urteil der Prüfungskommission")
+    st.header("📋 Das Urteil des Ballettmeisters")
     
     col_res1, col_res2 = st.columns(2)
     
@@ -105,7 +105,7 @@ if profi_file and user_file:
     with col_res2:
         st.markdown("### 📝 Reales Mängelprotokoll")
         
-        # HIER DIE STRENGE LOGIK: Es wird NUR gedruckt, was angehakt ist!
+        # Es wird nur ausgegeben, was wirklich angehakt wurde
         if fehler_berichte:
             for bericht in fehler_berichte:
                 st.write(bericht)
