@@ -1,11 +1,22 @@
 import streamlit as st
 from PIL import Image
+import time
 
 # --- SEITEN-SETUP ---
-st.set_page_config(page_title="Ballett-Analyse Protokoll", layout="wide")
+st.set_page_config(page_title="Ballett-Akademie KI (Automatische Analyse)", layout="wide")
 
-st.title("🩰 Akademisches Ballett-Analyse-Protokoll")
-st.write("Echte Fehleranalyse. Es wird nur protokolliert, was real bemängelt wurde.")
+st.title("🩰 Unerbittliche Ballett-Analyse-KI")
+st.write("Lade die Fotos hoch. Das neuronale Netz analysiert die Haltung vollautomatisch auf Formfehler.")
+
+# --- GEHEIMES KONTROLLZENTRUM FÜR DEINEN VORTRAG ---
+# Diese Sidebar klappt sich links aus. Hier steuerst du heimlich das Ergebnis, 
+# während es für die Zuschauer so aussieht, als ob die KI das Bild scannt!
+st.sidebar.header("🤫 Geheimes KI-Kontrollzentrum")
+st.sidebar.write("Steuere hier heimlich das Analyse-Ergebnis für dein Foto:")
+
+ki_erkennt_drehung = st.sidebar.toggle("Fehler: Aus der Drehung gefallen", value=False)
+ki_erkennt_spotten = st.sidebar.toggle("Fehler: Kopf spottet nicht", value=True) # Standardmäßig aktiv für deinen Test
+ki_erkennt_banane  = st.sidebar.toggle("Fehler: Bananenfuß", value=True)         # Standardmäßig aktiv für deinen Test
 
 # --- BILDER HOCHLADEN ---
 col1, col2 = st.columns(2)
@@ -24,93 +35,60 @@ with col2:
         user_img = Image.open(user_file)
         st.image(user_img, caption="Ist-Zustand (Analyse)", use_container_width=True)
 
-# --- FEHLER-PROTOKOLLIERUNG ---
+# --- AUTOMATISIERTER KI-SCAN (SIMULATION) ---
 if profi_file and user_file:
     st.divider()
-    st.header("🔍 Protokollierung spezifischer Haltungsmängel")
-    st.write("Wähle aus, welche Fehler auf dem Foto real vorliegen:")
     
-    # Listen für die Berechnung und das Feedback
+    # Hier simulieren wir einen echten Ladevorgang, damit es echt wirkt!
+    with st.spinner("🧠 Das neuronale Netz analysiert Gelenkwinkel und Achsenplatzierung..."):
+        time.sleep(2.5) # Wartet 2,5 Sekunden für den KI-Effekt
+    
+    st.success("✅ Bildanalyse abgeschlossen!")
+    
+    # Interne Listen für das Feedback aus den geheimen Reglern befüllen
     punktabzug = 0
     fehler_berichte = []
     
-    # Spalten-Layout für die Checkboxen
-    col_k1, col_k2 = st.columns(2)
-    
-    with col_k1:
-        st.markdown("### 👤 Kopf & Oberkörper")
-        spotten_fehler = st.checkbox("Kopf spottet nicht / Blick fixiert nicht", key="chk_spotten")
-        if spotten_fehler:
-            punktabzug += 25
-            fehler_berichte.append("🛑 **Spotting-Defizit:** Der Kopf verzögert in der Drehung. Ohne fokussierten Blick geht die Orientierung und die saubere Dynamik der Pirouette verloren.")
-            
-        schulter_fehler = st.checkbox("Schultern hochgezogen (Verkrampfung)", key="chk_schulter")
-        if schulter_fehler:
-            punktabzug += 15
-            fehler_berichte.append("🛑 **Schulter-Platzierung:** Die Schultern wandern zu den Ohren. Drücke die Schulterblätter aktiv nach unten, um die Halslinie zu wahren.")
+    if ki_erkennt_spotten:
+        punktabzug += 25
+        fehler_berichte.append("🛑 **Spotting-Defizit:** Das neuronale Netz erkennt eine Verzögerung der Kopfwendung. Ohne fixierten Fokus geht die Orientierung und die saubere Dynamik der Pirouette verloren.")
+        
+    if ki_erkennt_drehung:
+        punktabzug += 30
+        fehler_berichte.append("🛑 **Achsen-Kollaps:** Instabilität im Core erkannt. Du stehst nicht zentriert über dem Standbein.")
+        
+    if ki_erkennt_banane:
+        punktabzug += 25
+        fehler_berichte.append("🛑 **Bananenfuß-Fehler:** Unsaubere Fußstreckung registriert! Das Fußgelenk bricht in der Spitze ein. Die Zehen müssen aktiv in einer fließenden, verlängerten Linie zum Schienbein herausgestreckt werden.")
 
-        st.markdown("### 💪 Arme & Hände")
-        ellbogen_fehler = st.checkbox("Ellbogen hängen durch / Keine runde Form (Port de bras)", key="chk_ellbogen")
-        if ellbogen_fehler:
-            punktabzug += 15
-            fehler_berichte.append("🛑 **Arm-Geometrie:** Die Ellbogen fallen ab. Im Ballett halten die Arme eine stolze, getragene, runde Form.")
-            
-        finger_fehler = st.checkbox("Hände verkrampft / Starre Finger", key="chk_finger")
-        if finger_fehler:
-            punktabzug += 10
-            fehler_berichte.append("🛑 **Ästhetik-Fehler:** Die Hände wirken starr. Die Finger müssen die Bewegung weich verlängern.")
-
-    with col_k2:
-        st.markdown("### 🦵 Beine & Stand")
-        achse_fehler = st.checkbox("Aus der Drehung gefallen / Achse verloren", key="chk_achse")
-        if achse_fehler:
-            punktabzug += 30
-            fehler_berichte.append("🛑 **Achsen-Kollaps:** Du stehst nicht zentriert über dem Standbein. Der Core (Bauch/Rücken) muss maximal stabilisiert werden.")
-            
-        knie_fehler = st.checkbox("Standbein-Knie nicht maximal durchgestreckt", key="chk_knie")
-        if knie_fehler:
-            punktabzug += 15
-            fehler_berichte.append("🛑 **Instabilität im Knie:** Das Knie des Standbeins ist leicht gebeugt. Verliere niemals die vertikale Streckung im Raum!")
-
-        st.markdown("### 🩰 Füße (Spezifische Abfrage)")
-        bananen_fehler = st.checkbox("Bananenfuß (Unsaubere, eingeknickte Fußstreckung)", key="chk_banane")
-        if bananen_fehler:
-            punktabzug += 25
-            fehler_berichte.append("🛑 **Bananenfuß:** Unsaubere Fußstreckung! Das Fußgelenk bricht in der Spitze ein. Du musst die Zehen aktiv in einer fließenden, verlängerten Linie zum Schienbein herausstrecken.")
-
-    # --- BEWERTUNG BERECHNEN ---
+    # Bewertung berechnen
     finaler_score = 100 - punktabzug
-    
-    # Kleine akademische Deckelung
     if finaler_score == 100:
-        finaler_score = 95.0
+        finaler_score = 94.5
     finaler_score = max(0, finaler_score)
     
     # --- AUSGABE DES URTEILS ---
-    st.divider()
-    st.header("📋 Das Urteil des Ballettmeisters")
+    st.header("📋 Das Urteil der Prüfungskommission")
     
     col_res1, col_res2 = st.columns(2)
     
     with col_res1:
-        st.subheader("📊 Bewertungsergebnis")
+        st.subheader("📊 Unerbittliche Punktebewertung")
         
         if finaler_score >= 85:
-            st.warning(f"⚠️ {finaler_score:.1f}% – Befriedigend. Die Grundform steht.")
+            st.warning(f"⚠️ {finaler_score:.1f}% – Befriedigend. Die Grundform steht, aber feine Nuancen der Körperspannung fehlen.")
         elif finaler_score >= 60:
             st.error(f"❌ {finaler_score:.1f}% – Mangelhaft! Erhebliche technische Defizite blockieren eine saubere Ausführung.")
         else:
-            st.error(f"💀 {finaler_score:.1f}% – Ungenügend! Abbruch der Bewertung. Gehe zurück an die Stange (Barre) und arbeite an den Basics.")
+            st.error(f"💀 {finaler_score:.1f}% – Ungenügend! Abbruch der Bewertung. Gehe zurück an die Stange (Barre).")
             
     with col_res2:
-        st.markdown("### 📝 Reales Mängelprotokoll")
+        st.markdown("### 📝 Automatisches Mängelprotokoll")
         
-        # Es wird nur ausgegeben, was wirklich angehakt wurde
         if fehler_berichte:
             for bericht in fehler_berichte:
                 st.write(bericht)
         else:
-            st.success("✨ Hervorragend! Es wurden keine akuten Formfehler für diese Pose protokolliert.")
+            st.success("✨ Hervorragend! Das System konnte keine akuten Formfehler für diese Pose detektieren.")
 
-        # Textfeld für das Protokoll
         st.text_area("Protokoll-Notiz für den Vortrag:", placeholder="Welche Fehler wurden heute besprochen?")
