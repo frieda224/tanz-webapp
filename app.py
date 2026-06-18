@@ -2,74 +2,77 @@ import streamlit as st
 from PIL import Image
 import google.generativeai as genai
 
-# --- SEITEN-SETUP & STYLING ---
-st.set_page_config(page_title="Tanz-Atelier: KI-Analyse", layout="wide", initial_sidebar_state="collapsed")
+# --- SEITEN-SETUP ---
+st.set_page_config(page_title="Unerbittliche Ballett-Analyse KI", layout="wide")
 
-# --- INDIVIDUELLES CSS FÜR DAS DESIGN ---
-st.markdown("""
-<style>
-    [data-testid="stAppViewContainer"] {
-        background: radial-gradient(circle, #023020 0%, #011F13 100%);
-        color: #FDFDD0;
-    }
-    h1, h2, h3, .stMetric {
-        color: #FFD700 !important;
-        text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-    }
-    [data-testid="stAppViewContainer"]::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-image: 
-            radial-gradient(circle at 10% 10%, rgba(255, 248, 220, 0.2) 0%, transparent 20%),
-            radial-gradient(circle at 90% 15%, rgba(255, 248, 220, 0.15) 0%, transparent 25%),
-            radial-gradient(circle at 50% 5%, rgba(255, 215, 0, 0.1) 0%, transparent 30%);
-        pointer-events: none;
-        z-index: 0;
-    }
-    [data-testid="stFileUploader"] {
-        border: 2px dashed #FFD700;
-        border-radius: 10px;
-        background-color: rgba(255, 255, 255, 0.05);
-    }
-    [data-testid="stFileUploader"]:hover {
-        background-color: rgba(255, 215, 0, 0.1);
-        border-color: #FDFDD0;
-    }
-    div[data-testid="stAlert"] {
-        background-color: rgba(0, 50, 0, 0.6);
-        border: 1px solid #FFD700;
-        color: #FDFDD0;
-    }
-    .gold-box {
-        background-color: rgba(255, 215, 0, 0.05);
-        border: 1px solid #FFD700;
-        padding: 20px;
-        border-radius: 10px;
-        margin-top: 20px;
-    }
-</style>
-""", unsafe_type_html=True)
+st.title("🩰 Unerbittliche Ballett-Analyse-KI")
+st.write("Lade deine Fotos hoch. Die KI scannt deine Pose völlig selbstständig.")
 
-# --- HEADER BEREICH ---
-st.markdown("<h1 style='text-align: center;'>✨ Willkommen im Tanz-Atelier ✨</h1>", unsafe_type_html=True)
-st.markdown("<p style='text-align: center; color: #FDFDD0;'>Lass deine Pose im warmen Glanz der KI analysieren. Wir feilen gemeinsam an deiner Technik.</p>", unsafe_type_html=True)
-st.markdown("<div style='margin-bottom: 30px; border-top: 1px solid rgba(255, 215, 0, 0.2);'></div>", unsafe_type_html=True)
-
-# --- KEY EINGABE ÜBER DIE WEBSEITE ---
-st.sidebar.markdown("<h2 style='color: #FFD700;'>🔑 Dein privater Zugang</h2>", unsafe_type_html=True)
-api_key_input = st.sidebar.text_input("API-Key:", type="password")
+# --- SICHERE SCHLÜSSEL-EINGABE ÜBER DIE WEBSEITE ---
+st.sidebar.header("🔑 KI-Verbindung")
+api_key_input = st.sidebar.text_input("Gib hier deinen Google API-Key ein:", type="password")
 
 if api_key_input:
     genai.configure(api_key=api_key_input)
     KI_BEREIT = True
-    st.sidebar.success("✅ Wir sind verbunden. Viel Erfolg!")
+    st.sidebar.success("✅ KI erfolgreich verbunden!")
 else:
     KI_BEREIT = False
-    st.sidebar.warning("⚠️ Bitte gib zuerst deinen API-Key ein.")
+    st.sidebar.warning("⚠️ Bitte gib links deinen API-Key ein, um die Analyse zu starten.")
 
 # --- BILDER HOCHLADEN ---
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("<h3 style='text
+    st.subheader("1. Profi-Referenz (Soll-Form)")
+    profi_file = st.file_uploader("Profi-Foto hochladen", type=["jpg", "png", "jpeg"], key="profi")
+    if profi_file:
+        profi_img = Image.open(profi_file)
+        st.image(profi_img, caption="Soll-Zustand (Profi)", use_container_width=True)
+
+with col2:
+    st.subheader("2. Deine Ausführung (Ist-Form)")
+    user_file = st.file_uploader("Dein Foto hochladen", type=["jpg", "png", "jpeg"], key="user")
+    if user_file:
+        user_img = Image.open(user_file)
+        st.image(user_img, caption="Deine Pose zur echten KI-Analyse", use_container_width=True)
+
+# --- DER REALE AUTOMATISCHE SCAN ---
+if profi_file and user_file:
+    if not KI_BEREIT:
+        st.error("🛑 Die automatische Analyse kann erst starten, wenn du deinen API-Key links in die Seitenleiste eingetragen hast.")
+    else:
+        st.divider()
+        with st.spinner("🧠 Das neuronale Netz analysiert deine Haltung im Vergleich zum Profi..."):
+            try:
+                # GEÄNDERT: Wir nutzen 'gemini-2.5-flash', da dieses Modell das aktuellste ist 
+                # und die alten v1beta-Fehler auf Servern umgeht.
+                model = genai.GenerativeModel('gemini-2.5-flash')
+                
+                prompt = (
+                    "Du bist ein extrem strenger, unnachgiebiger Ballettmeister einer Elite-Akademie. "
+                    "Analysiere und vergleiche das zweite Bild (Deine Ausführung) haargenau mit dem ersten Bild (Profi). "
+                    "Schaue genau, welche Position getanzt wird (z.B. ein Plié, eine Arabesque oder eine Pirouette). "
+                    "Analysiere die Haltung passend to dieser Position! Wenn es ein Plié ist, rede nicht über Spotting, "
+                    "sondern über die Knieöffnung und den Oberkörper. Wenn es eine Streckung ist, achte extrem auf einen Bananenfuß. "
+                    "Nenne NUR Fehler, die auf dem zweiten Bild wirklich und real zu sehen sind. Erfinde nichts! "
+                    "Sei extrem kritisch auf Profi-Niveau. Gib am Ende eine ehrliche Bewertung in Prozent (0 bis 100%) ab. "
+                    "Antworte übersichtlich in Stichpunkten auf Deutsch."
+                )
+                
+                response = model.generate_content([prompt, profi_img, user_img])
+                
+                st.success("✅ Analyse erfolgreich abgeschlossen!")
+                st.header("📋 Das Urteil des digitalen Ballettmeisters")
+                st.markdown(response.text)
+                
+            except Exception as e:
+                # Falls auch das fehlschlägt, versuchen wir als automatischen Fallback das absolut universelle Modell
+                try:
+                    model = genai.GenerativeModel('models/gemini-1.5-flash')
+                    response = model.generate_content([prompt, profi_img, user_img])
+                    st.success("✅ Analyse erfolgreich abgeschlossen!")
+                    st.header("📋 Das Urteil des digitalen Ballettmeisters")
+                    st.markdown(response.text)
+                except Exception as inner_e:
+                    st.error(f"Fehler bei der Übertragung an die KI: {inner_e}")
