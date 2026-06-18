@@ -1,4 +1,3 @@
-opencv-python-headless
-mediapipe
+streamlit
 pillow
-numpy
+google-generativeai
