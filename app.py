@@ -72,28 +72,4 @@ else:
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("<h3 style='text-align: center;'>1. Die ideale Form (Referenz)</h3>", unsafe_type_html=True)
-    profi_file = st.file_uploader("Lade das Foto eines Profis hoch", type=["jpg", "png", "jpeg"], key="profi")
-    if profi_file:
-        profi_img = Image.open(profi_file)
-        st.image(profi_img, caption="Unser Vorbild (Soll-Form)", use_container_width=True)
-
-with col2:
-    st.markdown("<h3 style='text-align: center;'>2. Deine Ausführung (Foto)</h3>", unsafe_type_html=True)
-    user_file = st.file_uploader("Lade dein eigenes Foto hoch", type=["jpg", "png", "jpeg"], key="user")
-    if user_file:
-        user_img = Image.open(user_file)
-        st.image(user_img, caption="Dein Scan (Ist-Form)", use_container_width=True)
-
-# --- AUTOMATISCHE KI-ANALYSE ---
-if profi_file and user_file:
-    if not KI_BEREIT:
-        st.warning("🛑 Fast geschafft! Um den Scan zu starten, gib bitte links deinen API-Key ein.")
-    else:
-        st.markdown("<div style='margin-top: 40px; border-top: 1px solid rgba(255, 215, 0, 0.2);'></div>", unsafe_type_html=True)
-        with st.spinner("💡 Wir dimmen das Licht... Der digitale Ballettmeister prüft deine Pose ganz genau..."):
-            try:
-                model = genai.GenerativeModel('gemini-2.5-flash')
-                prompt = (
-                    "Du bist ein sehr erfahrener, aber zugewandter und freundlicher Ballettmeister einer Akademie. "
-                    "Analysiere und vergleiche das zweite Bild (Deine Ausführung) haargenau
+    st.markdown("<h3 style='text
