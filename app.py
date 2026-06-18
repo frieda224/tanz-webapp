@@ -6,23 +6,20 @@ import google.generativeai as genai
 st.set_page_config(page_title="Unerbittliche Ballett-Analyse KI", layout="wide")
 
 st.title("🩰 Unerbittliche Ballett-Analyse-KI")
-st.write("Lade deine Fotos hoch. Die KI scannt deine Pose völlig selbstständig und deckt Fehler unbarmherzig auf.")
+st.write("Lade deine Fotos hoch. Die KI scannt deine Pose völlig selbstständig.")
 
-# --- API-KEY AUS DEN SYSTEMEINSTELLUNGEN LADEN ---
-# Holt sich den Schlüssel vollautomatisch aus den Streamlit Secrets
-api_key = st.secrets.get("GEMINI_API_KEY", "")
+# --- SICHERE SCHLÜSSEL-EINGABE ÜBER DIE WEBSEITE ---
+st.sidebar.header("🔑 KI-Verbindung")
+# Das Passwort-Feld verbirgt den Key bei der Eingabe auf der Webseite
+api_key_input = st.sidebar.text_input("Gib hier deinen Google API-Key ein:", type="password")
 
-if api_key:
-    genai.configure(api_key=api_key)
+if api_key_input:
+    genai.configure(api_key=api_key_input)
     KI_BEREIT = True
+    st.sidebar.success("✅ KI erfolgreich verbunden!")
 else:
     KI_BEREIT = False
-    st.sidebar.warning("⚠️ Der GEMINI_API_KEY fehlt noch in den Streamlit Secrets!")
-    # Ausweichoption, falls du ihn doch mal schnell eintippen willst:
-    temp_key = st.sidebar.text_input("Oder hier temporär eingeben:", type="password")
-    if temp_key:
-        genai.configure(api_key=temp_key)
-        KI_BEREIT = True
+    st.sidebar.warning("⚠️ Bitte gib links deinen API-Key ein, um die Analyse zu starten.")
 
 # --- BILDER HOCHLADEN ---
 col1, col2 = st.columns(2)
@@ -44,32 +41,27 @@ with col2:
 # --- DER REALE AUTOMATISCHE SCAN ---
 if profi_file and user_file:
     if not KI_BEREIT:
-        st.error("🛑 Die automatische Analyse kann nicht starten, weil der Google API-Key nicht hinterlegt ist.")
+        st.error("🛑 Die automatische Analyse kann erst starten, wenn du deinen API-Key links in die Seitenleiste eingetragen hast.")
     else:
         st.divider()
         with st.spinner("🧠 Das neuronale Netz analysiert deine Haltung im Vergleich zum Profi..."):
             try:
-                # Das stabile, visuelle Modell von Google aufrufen
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
-                # Der glasklare Arbeitsauftrag an die KI: Keine Ausreden, nur echte Fehler!
                 prompt = (
                     "Du bist ein extrem strenger, unnachgiebiger Ballettmeister einer Elite-Akademie. "
                     "Analysiere und vergleiche das zweite Bild (Deine Ausführung) haargenau mit dem ersten Bild (Profi). "
                     "Schaue genau, welche Position getanzt wird (z.B. ein Plié, eine Arabesque oder eine Pirouette). "
-                    "Analysiere die Haltung passend zu dieser Position! Wenn es ein Plie ist, rede nicht über Spotting, "
+                    "Analysiere die Haltung passend zu dieser Position! Wenn es ein Plié ist, rede nicht über Spotting, "
                     "sondern über die Knieöffnung und den Oberkörper. Wenn es eine Streckung ist, achte extrem auf einen Bananenfuß. "
                     "Nenne NUR Fehler, die auf dem zweiten Bild wirklich und real zu sehen sind. Erfinde nichts! "
                     "Sei extrem kritisch auf Profi-Niveau. Gib am Ende eine ehrliche Bewertung in Prozent (0 bis 100%) ab. "
                     "Antworte übersichtlich in Stichpunkten auf Deutsch."
                 )
                 
-                # Bilder an das Google-Rechenzentrum übergeben
                 response = model.generate_content([prompt, profi_img, user_img])
                 
                 st.success("✅ Analyse erfolgreich abgeschlossen!")
-                
-                # Das unbestechliche Urteil ausgeben
                 st.header("📋 Das Urteil des digitalen Ballettmeisters")
                 st.markdown(response.text)
                 
