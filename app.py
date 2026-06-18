@@ -1,23 +1,23 @@
 import streamlit as st
 from PIL import Image
 import google.generativeai as genai
-import os
 
 # --- SEITEN-SETUP ---
 st.set_page_config(page_title="Echte Ballett-Analyse KI", layout="wide")
 
-st.title("💡 Unerbittliche Ballett-Analyse-KI")
-st.write("Lade deine Fotos hoch. Ein echtes neuronale Netz (Google Gemini) scannt deine Pose völlig selbstständig.")
+st.title("🩰 Unerbittliche Ballett-Analyse-KI")
+st.write("Lade deine Fotos hoch. Das neuronale Netz scannt deine Pose völlig selbstständig und deckt Fehler schonungslos auf.")
 
-# --- KI SCHLÜSSEL EINRICHTEN ---
-# Du kannst dir unter aistudio.google.com kostenlos einen API-Key holen.
-# Trage ihn hier ein oder nutze die Streamlit Secrets.
-API_KEY = st.sidebar.text_input("Dein Google API Key:", type="password")
+# --- API-KEY AUTOMATISCH LADEN ---
+# Versucht zuerst, den Key aus den Streamlit Secrets zu laden, ansonsten aus der Sidebar
+api_key = st.secrets.get("GEMINI_API_KEY", "")
 
-if API_KEY:
-    genai.configure(api_key=API_KEY)
+if not api_key:
+    api_key = st.sidebar.text_input("Google API Key hier eintragen:", type="password")
+    if api_key:
+        genai.configure(api_key=api_key)
 else:
-    st.sidebar.warning("⚠️ Bitte gib links deinen kostenlosen Google API-Key ein, damit die KI die Bilder scannen kann!")
+    genai.configure(api_key=api_key)
 
 # --- BILDER HOCHLADEN ---
 col1, col2 = st.columns(2)
@@ -38,13 +38,13 @@ with col2:
 
 # --- DER ECHTE AUTOMATISCHE SCAN ---
 if profi_file and user_file:
-    if not API_KEY:
-        st.error("🛑 Die Analyse kann nicht starten, weil der API-Key in der linken Leiste fehlt.")
+    if not api_key:
+        st.error("🛑 Die Analyse kann nicht starten, weil der API-Key fehlt. Bitte trage ihn links in der Leiste ein oder hinterlege ihn in den Streamlit Secrets.")
     else:
         st.divider()
         with st.spinner("🧠 Das neuronale Netz scannt deine Fotos und vergleicht die Haltung..."):
             try:
-                # Wir nutzen das multimodale Modell "gemini-1.5-flash", das Bilder analysieren kann
+                # Nutzen des multimodalen Modells für Bildanalyse
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
                 # Der unerbittliche Arbeitsauftrag an die KI
@@ -55,19 +55,20 @@ if profi_file and user_file:
                     "fehlendes Spotting bei Drehungen (falsche Kopfhaltung/Blick), hochgezogene Schultern, "
                     "durchhängende Ellbogen oder eine instabile Körperachse. "
                     "Sei extrem kritisch! Wenn Fehler vorliegen, benenne sie direkt und knallhart. "
-                    "Gib am Ende eine ehrliche Bewertung in Prozent (0 bis 100%) ab, wobei 100% im Ballett unerreichbar ist. "
-                    "Antworte strukturiert auf Deutsch."
+                    "Sag nur das, was auf dem zweiten Bild wirklich falsch ist. Wenn ein Bereich gut ist, kritisiere ihn nicht künstlich, "
+                    "aber bleibe insgesamt auf Profi-Niveau unnachgiebig. "
+                    "Gib am Ende eine ehrliche Bewertung in Prozent (0 bis 100%) ab. "
+                    "Antworte strukturiert in klaren Stichpunkten auf Deutsch."
                 )
                 
-                # Wir schicken den Auftrag und BEIDE Bilder an Google
+                # Senden an die API
                 response = model.generate_content([prompt, profi_img, user_img])
                 
-                st.success("✅ Bildanalyse erfolgreich durchgeführt!")
+                st.success("✅ Bildanalyse abgeschlossen!")
                 
-                # Ausgabe der echten KI-Antwort
+                # Ausgabe des echten Ergebnisses
                 st.header("📋 Das Urteil des digitalen Ballettmeisters")
                 st.markdown(response.text)
                 
             except Exception as e:
                 st.error(f"Fehler bei der KI-Analyse: {e}")
-                st.info("Hinweis: Überprüfe, ob dein API-Key gültig ist.")
