@@ -1,3 +1,4 @@
+
 import streamlit as st
 from PIL import Image
 import cv2
@@ -8,7 +9,7 @@ import numpy as np
 st.set_page_config(page_title="Anatomische Ballett-Analyse", layout="wide")
 
 st.title("🩰 Anatomisches Ballett-Analyse-Protokoll")
-st.write("Echte Gelenk- und Achsenberechnung über Computer Vision. Erkennt Fehler basierend auf Biomechanik.")
+st.write("Echte Gelenk- und Achsenberechnung. Erkennt Fehler basierend auf Biomechanik – ganz ohne manuelles Anklicken.")
 
 # --- BILDER HOCHLADEN ---
 col1, col2 = st.columns(2)
@@ -29,15 +30,16 @@ with col2:
 
 # --- WINKELBERECHNUNG (MATHEMATISCH) ---
 def berechne_winkel(a, b, c):
-    a = np.array(a) # Punkt A (z.B. Hüfte)
-    b = np.array(b) # Punkt B (z.B. Knie / Scheitelpunkt)
-    c = np.array(c) # Punkt C (z.B. Knöchel)
+    """Berechnet den Winkel am Scheitelpunkt b zwischen den Punkten a und c"""
+    a = np.array(a)  # Punkt A (z.B. Hüfte)
+    b = np.array(b)  # Punkt B (z.B. Knie)
+    c = np.array(c)  # Punkt C (z.B. Knöchel)
     
     radians = np.arctan2(c[1]-b[1], c[0]-b[0]) - np.arctan2(a[1]-b[1], a[0]-b[0])
-    winkel = np.abs(radians*180.0/np.pi)
+    winkel = np.abs(radians * 180.0 / np.pi)
     
     if winkel > 180.0:
-        winkel = 360-winkel
+        winkel = 360 - winkel
         
     return winkel
 
@@ -48,15 +50,15 @@ if profi_file and user_file:
     # MediaPipe Pose-Erkennung initialisieren
     mp_pose = mp.solutions.pose
     
-    with st.spinner("Extrahiere Skelettachsen und berechne Gelenkwinkel..."):
-        # Konvertiere das User-Bild für OpenCV
+    with st.spinner("🧠 Extrahiere Skelettachsen und berechne Gelenkwinkel..."):
+        # Konvertiere das hochgeladene User-Bild in ein OpenCV-kompatibles Format
         user_cv = cv2.cvtColor(np.array(user_img), cv2.COLOR_RGB2BGR)
         
         with mp_pose.Pose(static_image_mode=True, min_detection_confidence=0.5) as pose:
             ergebnis = pose.process(cv2.cvtColor(user_cv, cv2.COLOR_BGR2RGB))
             
             if not ergebnis.pose_landmarks:
-                st.error("🛑 Es wurden keine Gelenke auf deinem Foto erkannt. Bitte achte darauf, dass dein ganzer Körper gut sichtbar ist!")
+                st.error("🛑 Es wurden keine Gelenke auf deinem Foto erkannt. Bitte achte darauf, dass dein ganzer Körper gut sichtbar und gut ausgeleuchtet ist!")
             else:
                 landmarks = ergebnis.pose_landmarks.landmark
                 
@@ -74,47 +76,20 @@ if profi_file and user_file:
                 # 1. Kniebeugung berechnen (Wie tief ist das Plié?)
                 knie_winkel = berechne_winkel(huefte_l, knie_l, knoechel_l)
                 
-                # 2. Oberkörper-Lot prüfen (Hüft-Schulter-Winkel zur Vertikalen)
+                # 2. Oberkörper-Lot prüfen (Abweichung der Linie Hüfte-Schulter von der vertikalen Achse)
                 oberkoerper_winkel = berechne_winkel([huefte_l[0], 0], huefte_l, schulter_l)
                 
                 # 3. Fußstreckungs-Achse (Winkel zwischen Knie, Knöchel und Zehenspitze)
                 fuss_winkel = berechne_winkel(knie_l, knoechel_l, zeh_l)
                 
-                # --- FEHLERDEFINITION BASIEREND AUF MESSWERTEN ---
+                # --- ECHTE FEHLERDEFINITION BASIEREND AUF MESSWERTEN ---
                 
-                # Überprüfung des Oberkörpers (Darf beim Plié nicht nach vorne kippen)
+                # Fehler A: Oberkörper kippt beim Plié nach vorne
                 if oberkoerper_winkel > 12:
                     score -= 25
                     fehler_berichte.append(f"🛑 **Oberkörper kippt vor ({oberkoerper_winkel:.1f}° Abweichung):** Beim Plié muss das Becken zentriert und der Rücken vollkommen vertikal bleiben. Du verlagerst das Gewicht fälschlicherweise nach vorne.")
                 
-                # Überprüfung auf Bananenfuß (Wenn das Bein gestreckt sein sollte, oder die Fußachse einknickt)
-                # Ein blockiertes oder falsch auswärts gedrehtes Gelenk verändert den Winkel zwischen Knie und Zeh
-                if fuss_winkel < 130 and knie_winkel > 160: 
+                # Fehler B: Bananenfuß (Gilt, wenn das Bein gestreckt sein sollte und der Fuß einknickt)
+                if fuss_winkel < 135 and knie_winkel > 165: 
                     score -= 25
-                    fehler_berichte.append(f"🛑 **Bananenfuß / Unsaubere Fußachse ({fuss_winkel:.1f}°):** Bei gestrecktem Bein bricht die Linie zum Spann ein. Die Zehen verlängern nicht die Linie des Schienbeins.")
-                
-                # Warnung, falls überhaupt keine Kniebeugung stattfindet (Kein echtes Plié)
-                if knie_winkel > 172:
-                    fehler_berichte.append(f"ℹ️ **Hineinzoomen auf Knieachse:** Dein Standbein ist fast vollständig gestreckt ({knie_winkel:.1f}°). Für ein Plié ist keine ausreichende Beugung messbar.")
-
-                score = max(0, score)
-                
-                # --- AUSGABE DES URTEILS ---
-                st.header("📋 Das Urteil der anatomischen Auswertung")
-                col_res1, col_res2 = st.columns(2)
-                
-                with col_res1:
-                    st.subheader("📊 Gemessene Winkelwerte")
-                    st.write(f"- **Knie-Beugung:** {knie_winkel:.1f}°")
-                    st.write(f"- **Oberkörper-Lot:** {oberkoerper_winkel:.1f}°")
-                    st.write(f"- **Fußgelenk-Linie:** {fuss_winkel:.1f}°")
-                    
-                    st.metric(label="Gesamtnote der Körperplatzierung", value=f"{score:.1f}%")
-                    
-                with col_res2:
-                    st.markdown("### 📝 Reales Mängelprotokoll")
-                    if fehler_berichte:
-                        for bericht in fehler_berichte:
-                            st.write(bericht)
-                    else:
-                        st.success("✨ Die Gelenkachsen entsprechen der anatomischen Vorgabe für diese Position. Keine groben Fehlstellungen in Oberkörper oder Fußgelenk detektiert.")
+                    fehler_berichte.append(f"🛑 **B
