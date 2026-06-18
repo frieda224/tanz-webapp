@@ -1,4 +1,3 @@
-
 import streamlit as st
 from PIL import Image
 import cv2
@@ -92,4 +91,31 @@ if profi_file and user_file:
                 # Fehler B: Bananenfuß (Gilt, wenn das Bein gestreckt sein sollte und der Fuß einknickt)
                 if fuss_winkel < 135 and knie_winkel > 165: 
                     score -= 25
-                    fehler_berichte.append(f"🛑 **B
+                    fehler_berichte.append(f"🛑 **Bananenfuß / Unsaubere Fußachse ({fuss_winkel:.1f}°):** Bei gestrecktem Bein bricht die Linie zum Spann ein. Die Zehen verlängern nicht die saubere, gerade Linie des Schienbeins.")
+                
+                # Hinweis C: Wenn die Knie für ein Plié gar nicht gebeugt sind
+                if knie_winkel > 175 and oberkoerper_winkel <= 12:
+                    fehler_berichte.append(f"ℹ️ **Hineinzoomen auf Knieachse:** Dein Standbein ist vollständig gestreckt ({knie_winkel:.1f}°). Für die Analyse eines Pliés ist keine ausreichende Kniebeugung messbar.")
+
+                # Mindestscore festlegen
+                score = max(0, score)
+                
+                # --- AUSGABE DES URTEILS ---
+                st.header("📋 Das Urteil der anatomischen Auswertung")
+                col_res1, col_res2 = st.columns(2)
+                
+                with col_res1:
+                    st.subheader("📊 Gemessene Winkelwerte")
+                    st.write(f"- **Knie-Beugung:** {knie_winkel:.1f}°")
+                    st.write(f"- **Oberkörper-Lot:** {oberkoerper_winkel:.1f}°")
+                    st.write(f"- **Fußgelenk-Linie:** {fuss_winkel:.1f}°")
+                    
+                    st.metric(label="Gesamtnote der Körperplatzierung", value=f"{score:.1f}%")
+                    
+                with col_res2:
+                    st.markdown("### 📝 Reales Mängelprotokoll")
+                    if fehler_berichte:
+                        for bericht in fehler_berichte:
+                            st.write(bericht)
+                    else:
+                        st.success("✨ Die Gelenkachsen entsprechen der anatomischen Vorgabe für diese Position. Keine groben Fehlstellungen in Oberkörper oder Fußgelenk detektiert.")
