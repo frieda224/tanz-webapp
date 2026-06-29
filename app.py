@@ -94,22 +94,4 @@ with col2:
 # --- DER AUTOMATISCHE SCAN ---
 if profi_file and user_file:
     if not KI_BEREIT:
-        st.error("🛑 Die automatische Analyse kann erst starten, wenn du deinen API-Key links eingetragen hast.")
-    else:
-        st.markdown("<div style='margin-top: 40px; border-top: 1px solid rgba(255, 215, 0, 0.2);'></div>", unsafe_allow_html=True)
-        with st.spinner("💡 Wir dimmen das Licht... Der freundliche digitale Tanzmeister prüft deine Pose ganz genau..."):
-            try:
-                model = genai.GenerativeModel('gemini-2.5-flash')
-                prompt = "Du bist ein sehr erfahrener, aber zugewandter und freundlicher Ballettmeister. Analysiere und vergleiche das zweite Bild (Deine Ausführung) haargenau mit dem ersten Bild (Profi). Habe Respekt vor der gezeigten Leistung, sei aber präzise und konstruktiv. Erkenne die Position (z.B. Plié, Arabesque, Pirouette) und analysiere die Haltung passend dazu (z.B. Knieöffnung, Oberkörper oder Bananenfuß). Nenne NUR Fehler, die real auf dem Bild zu sehen sind. Deine Tipps sollen helfen, sich zu verbessern, und motivieren. Gib am Ende eine ehrliche, aber liebevolle Bewertung in Prozent (0-100%) ab. Antworte übersichtlich in Stichpunkten auf Deutsch."
-                
-                response = model.generate_content([prompt, profi_img, user_img])
-                
-                st.success("✅ Analyse erfolgreich abgeschlossen!")
-                st.markdown("<h2 style='text-align: center;'>📋 Das Urteil des digitalen Tanzmeisters</h2>", unsafe_allow_html=True)
-                st.markdown(f"<div class='gold-box'>{response.text}</div>", unsafe_allow_html=True)
-                st.markdown("<p style='text-align: center; color: #FFD700; font-weight: bold; margin-top: 15px;'>✨ Bleib dran! Jedes Training bringt dich weiter.</p>", unsafe_allow_html=True)
-                
-            except Exception as e:
-                try:
-                    model = genai.GenerativeModel('models/gemini-1.5-flash')
-                    response = model.generate_content(
+        st.error("🛑 Die automatische Analyse kann erst starten, wenn du deinen API-Key links eingetragen hast
