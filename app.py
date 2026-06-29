@@ -47,29 +47,3 @@ st.markdown("""
             3px 40px, 100px 100px,
             100% 100%;
         background-repeat: no-repeat;
-        pointer-events: none;
-        z-index: 1;
-    }
-    
-    /* Styling für die Upload-Boxen */
-    [data-testid="stFileUploader"] {
-        border: 2px dashed #FFD700;
-        border-radius: 10px;
-        background-color: rgba(255, 255, 255, 0.04);
-    }
-    
-    /* Goldene Box für das Feedback der KI */
-    .gold-box {
-        background-color: rgba(255, 215, 0, 0.05);
-        border: 1px solid #FFD700;
-        padding: 23px;
-        border-radius: 12px;
-        margin-top: 20px;
-        box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# --- HEADER BEREICH ---
-st.markdown("<h1 style='text-align: center; margin-top: 30px;'>Willkommen im Tanz-Atelier</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #FDFDD0;'>Lass deine Pose im warmen Glanz der KI analysieren. Wir feilen gemeinsam an deiner Technik.</p>", unsafe_allow_html
