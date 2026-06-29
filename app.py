@@ -1,4 +1,3 @@
-
 import streamlit as st
 from PIL import Image
 import google.generativeai as genai
@@ -51,15 +50,15 @@ st.markdown("""
         box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);
     }
 </style>
-""", unsafe_type_html=True)
+""", unsafe_allow_html=True)
 
 # --- HEADER BEREICH ---
-st.markdown("<h1 style='text-align: center;'>✨ Willkommen im Tanz-Atelier ✨</h1>", unsafe_type_html=True)
-st.markdown("<p style='text-align: center; color: #FDFDD0;'>Lass deine Pose im warmen Glanz der KI analysieren. Wir feilen gemeinsam an deiner Technik.</p>", unsafe_type_html=True)
-st.markdown("<div style='margin-bottom: 30px; border-top: 1px solid rgba(255, 215, 0, 0.2);'></div>", unsafe_type_html=True)
+st.markdown("<h1 style='text-align: center;'>✨ Willkommen im Tanz-Atelier ✨</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #FDFDD0;'>Lass deine Pose im warmen Glanz der KI analysieren. Wir feilen gemeinsam an deiner Technik.</p>", unsafe_allow_html=True)
+st.markdown("<div style='margin-bottom: 30px; border-top: 1px solid rgba(255, 215, 0, 0.2);'></div>", unsafe_allow_html=True)
 
 # --- SICHERE SCHLÜSSEL-EINGABE ---
-st.sidebar.markdown("<h2 style='color: #FFD700;'>🔑 Dein Zugang</h2>", unsafe_type_html=True)
+st.sidebar.markdown("<h2 style='color: #FFD700;'>🔑 Dein Zugang</h2>", unsafe_allow_html=True)
 api_key_input = st.sidebar.text_input("Gib hier deinen Google API-Key ein:", type="password")
 
 if api_key_input:
@@ -74,14 +73,14 @@ else:
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("<h3 style='text-align: center;'>1. Die ideale Form (Referenz)</h3>", unsafe_type_html=True)
+    st.markdown("<h3 style='text-align: center;'>1. Die ideale Form (Referenz)</h3>", unsafe_allow_html=True)
     profi_file = st.file_uploader("Profi-Foto hochladen", type=["jpg", "png", "jpeg"], key="profi")
     if profi_file:
         profi_img = Image.open(profi_file)
         st.image(profi_img, caption="Soll-Zustand (Profi)", use_container_width=True)
 
 with col2:
-    st.markdown("<h3 style='text-align: center;'>2. Deine Ausführung (Foto)</h3>", unsafe_type_html=True)
+    st.markdown("<h3 style='text-align: center;'>2. Deine Ausführung (Foto)</h3>", unsafe_allow_html=True)
     user_file = st.file_uploader("Dein Foto hochladen", type=["jpg", "png", "jpeg"], key="user")
     if user_file:
         user_img = Image.open(user_file)
@@ -92,7 +91,7 @@ if profi_file and user_file:
     if not KI_BEREIT:
         st.error("🛑 Die automatische Analyse kann erst starten, wenn du deinen API-Key links eingetragen hast.")
     else:
-        st.markdown("<div style='margin-top: 40px; border-top: 1px solid rgba(255, 215, 0, 0.2);'></div>", unsafe_type_html=True)
+        st.markdown("<div style='margin-top: 40px; border-top: 1px solid rgba(255, 215, 0, 0.2);'></div>", unsafe_allow_html=True)
         with st.spinner("💡 Wir dimmen das Licht... Der freundliche digitale Tanzmeister prüft deine Pose ganz genau..."):
             try:
                 model = genai.GenerativeModel('gemini-2.5-flash')
@@ -103,17 +102,17 @@ if profi_file and user_file:
                 response = model.generate_content([prompt, profi_img, user_img])
                 
                 st.success("✅ Analyse erfolgreich abgeschlossen!")
-                st.markdown("<h2 style='text-align: center;'>📋 Das Urteil des digitalen Tanzmeisters</h2>", unsafe_type_html=True)
-                st.markdown(f"<div class='gold-box'>{response.text}</div>", unsafe_type_html=True)
-                st.markdown("<p style='text-align: center; color: #FFD700; font-weight: bold; margin-top: 15px;'>✨ Bleib dran! Jedes Training bringt dich weiter.</p>", unsafe_type_html=True)
+                st.markdown("<h2 style='text-align: center;'>📋 Das Urteil des digitalen Tanzmeisters</h2>", unsafe_allow_html=True)
+                st.markdown(f"<div class='gold-box'>{response.text}</div>", unsafe_allow_html=True)
+                st.markdown("<p style='text-align: center; color: #FFD700; font-weight: bold; margin-top: 15px;'>✨ Bleib dran! Jedes Training bringt dich weiter.</p>", unsafe_allow_html=True)
                 
             except Exception as e:
                 try:
                     model = genai.GenerativeModel('models/gemini-1.5-flash')
                     response = model.generate_content([prompt, profi_img, user_img])
                     st.success("✅ Analyse erfolgreich abgeschlossen!")
-                    st.markdown("<h2 style='text-align: center;'>📋 Das Urteil des digitalen Tanzmeisters</h2>", unsafe_type_html=True)
-                    st.markdown(f"<div class='gold-box'>{response.text}</div>", unsafe_type_html=True)
-                    st.markdown("<p style='text-align: center; color: #FFD700; font-weight: bold; margin-top: 15px;'>✨ Bleib dran! Jedes Training bringt dich weiter.</p>", unsafe_type_html=True)
+                    st.markdown("<h2 style='text-align: center;'>📋 Das Urteil des digitalen Tanzmeisters</h2>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='gold-box'>{response.text}</div>", unsafe_allow_html=True)
+                    st.markdown("<p style='text-align: center; color: #FFD700; font-weight: bold; margin-top: 15px;'>✨ Bleib dran! Jedes Training bringt dich weiter.</p>", unsafe_allow_html=True)
                 except Exception as inner_e:
                     st.error(f"Fehler im Lichtermeer: {inner_e}")
